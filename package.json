@@ -1,5 +1,6 @@
 {
   "dependencies": {
+    "axios": "^0.21.1",
     "fs": "^0.0.1-security",
     "puppeteer": "^9.1.1"
   }

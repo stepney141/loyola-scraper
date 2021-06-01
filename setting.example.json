@@ -1,5 +1,6 @@
 {
     "loyola_id": "A1234567",
     "loyola_password": "abcdefg1234567",
-    "loyola_uri": "https://scs.cl.sophia.ac.jp/campusweb/campusportal.do"
+    "loyola_uri": "https://scs.cl.sophia.ac.jp/campusweb/campusportal.do",
+    "download_path": "./downloads"
 }
