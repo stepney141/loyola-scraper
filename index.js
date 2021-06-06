@@ -70,7 +70,7 @@ const post_webhook = async (webhook_url, [notice_title = "掲示タイトル", n
         const file_texts = (attached_file_flag == false) ? "添付ファイルは存在しないようです" : "添付ファイルがあるようです。掲示板を開いてダウンロードしてください";
         const webhook_body = { //Webhookに送信するデータ本体
             "username": 'LOYOLA更新情報',
-            "avatar_url": 'https://static.selelab.com/favicon.ico',
+            "avatar_url": 'https://raw.githubusercontent.com/stepney141/loyola-scraper/master/avatar.jpg',
             "content": `LOYOLAに新しい課外活動情報が掲示されました！\n${file_texts}`,
             "embeds": [{
                 "title": notice_title,
