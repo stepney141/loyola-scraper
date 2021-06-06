@@ -154,7 +154,7 @@ const loyola_scraper = async (browser) => {
         const clubInfoLatestTimeHandle = await newPage.$x(loyola_xpath.club_info_update_time_latest);
         const latest_info_date = await (await clubInfoLatestTimeHandle[0].getProperty("innerText")).jsonValue();
 
-        if (Date.parse(latest_info_date) == Date.parse(prev_info_date)) {
+        if (Date.parse(latest_info_date) !== Date.parse(prev_info_date)) {
             //前回に掲示板を確認した時より後に、新しく掲示が出てた時の処理
 
             await fs.writeFile(setting.date_temp_file_path, latest_info_date, (e) => {
@@ -180,7 +180,7 @@ const loyola_scraper = async (browser) => {
                 await (await (await noticeTime_Handle)[0].getProperty("innerText")).jsonValue() //更新時刻
             ];
 
-            await post_webhook(setting.discord_webhook_url, notice_info, attached_file_exists);
+            await post_webhook(setting.discord_webhook_url, notice_info, attached_file_exists); //webhook送信
             console.log(notice_info);
 
         } //更新が来てなかったら何もしない
