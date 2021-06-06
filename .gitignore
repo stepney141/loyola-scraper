@@ -1,2 +1,4 @@
 node_modules
-setting.json
+/settings/*
+!/settings/setting.example.json
+# /settings/setting.example.jsonだけは無視しないが、同ディレクトリ以下の他のファイルは無視する

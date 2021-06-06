@@ -1,7 +1,7 @@
 const puppeteer = require('puppeteer');
-const axios = require('axios');
+const fetch = require('node-fetch');
 const fs = require('fs');
-const setting = require('./setting.json');
+const setting = require('./settings/setting.json');
 
 const loyola_xpath = {
     login_username: '//input[@name="userName"]',
@@ -67,22 +67,28 @@ const fetch_file = async (x, y, page) => {
 
 const post_webhook = async (webhook_url) => {
     try {
-        const config = { //ヘッダーなどの設定
-            headers: {
-                'Content-type': 'multipart/form-data',
+        const response = await fetch(webhook_url,
+            {
+                method: 'POST',
+                headers: { //ヘッダ
+                    'Content-type': 'multipart/form-data',
+                },
+                body: { //Webhookに送信するデータ本体
+                    username: 'LOYOLA更新情報',
+                    avatar_url: 'https://static.selelab.com/favicon.ico',
+                    content: `LOYOLAに新しい課外活動情報が掲示されました！`
+                }
             }
-        };
-        const post_data = { //送信するデータ
-            username: 'LOYOLA更新情報',
-            avatar_url: 'https://static.selelab.com/favicon.ico',
-            content: `LOYOLAに新しい課外活動情報が掲示されました！`
-        };
-
-        const response = await axios.post(webhook_url, post_data, config);
-        console.log(response);
+        );
+        if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText} ${await response.text()}`);
+        }
+        console.log(await response.json());
     } catch (e) {
         console.log(e);
+        return false;
     }
+    return true;
 };
 
 const loyola_scraper = async (browser) => {
@@ -93,7 +99,7 @@ const loyola_scraper = async (browser) => {
             delete navigator.__proto__.webdriver;
         });
 
-        await page.goto(setting.loyola_uri, {
+        await page.goto(setting.loyola_uri, { //LOYOLAトップページに飛ぶ
             waitUntil: "networkidle0",
         });
 
@@ -120,7 +126,7 @@ const loyola_scraper = async (browser) => {
         */
         const pageTarget = page.target(); //新規タブのopenerを保存
         const newTarget = await browser.waitForTarget(target => target.opener() === pageTarget); //新規タブが開いたか確認
-        const newPage = await newTarget.page(); //新規タブの情報を保存
+        const newPage = await newTarget.page(); //新規タブを作成
         await newPage.evaluateOnNewDocument(() => { //webdriver.navigatorを消して自動操縦であることを隠す
             Object.defineProperty(navigator, 'webdriver', ()=>{});
             delete navigator.__proto__.webdriver;
@@ -134,9 +140,9 @@ const loyola_scraper = async (browser) => {
         await newPage.waitForTimeout(2000);//画面遷移待ち
 
         /* ここから大学掲示板の課外活動掲示一覧での操作に突入 */
-        const prev_info_date = fs.readFileSync(setting.date_temp_file_path, 'utf-8'); //最後に取得した課外活動掲示の情報を取得
+        const prev_info_date = fs.readFileSync(setting.date_temp_file_path, 'utf-8'); //最後に取得した課外活動掲示の時刻情報をファイルから読み込む
+        
         console.log(prev_info_date);
-
         const clubInfoTimesHandle = await newPage.$x(loyola_xpath.club_info_update_times);
         for (const data of clubInfoTimesHandle) {
             console.log(
@@ -148,7 +154,16 @@ const loyola_scraper = async (browser) => {
         const latest_info_date = await (await clubInfoLatestTimeHandle[0].getProperty("innerText")).jsonValue();
         await fs.writeFile(setting.date_temp_file_path, latest_info_date, (e) => {
             if (e) throw new Error('file writing failed:' + e);
-        }); //最後に取得した課外活動掲示の情報を上書き
+        }); //最後に取得した課外活動掲示の時刻情報をファイルへ書き出す
+        if (Date.parse(latest_info_date) !== Date.parse(prev_info_date)) {
+            //前回に掲示板を確認した時より後に、新しく掲示が出てた時の処理
+
+            await fs.writeFile(setting.date_temp_file_path, latest_info_date, (e) => {
+                if (e) throw new Error('file writing failed:' + e);
+            }); //最後に取得した課外活動掲示の時刻情報をファイルへ書き出す
+
+
+        } //更新が来てなかったら何もしない
 
         /* LOYOLAからログアウト */
         await mouse_click(700, 20, page); //メニューバーの"ログアウト"を押す
