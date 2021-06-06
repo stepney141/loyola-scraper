@@ -10,12 +10,12 @@ const loyola_xpath = {
     link_from_home_to_board_menu: '//div[@id="tab-kj"]', //ホーム画面ヘッダーの掲示板アイコン
     link_from_home_to_board: '//*[@id="tabmenu-ul"]/li[1]/span', //掲示板アイコンをクリックした先から掲示板本体へ飛ぶリンク
     link_from_main_board_to_univ_bulletin_board: '/html/body/table[3]/tbody/tr[7]/td[1]/a', //掲示板ホームから大学掲示板へのリンク
-    club_info_links: "//td[contains(*, '課外活動')]/p[2]/a", //大学掲示板の中にある課外活動情報へのリンク
-    club_info_update_times: '//*[@id="keijiSearchForm"]/table[4]/tbody/tr/td[4]', //課外活動の情報の更新日時（すべて）
-    club_info_update_time_latest: '//*[@id="keijiSearchForm"]/table[4]/tbody/tr[1]/td[4]', //課外活動の情報の更新日時（最新のみ）
+    club_info_update_times: '//*[@id="keijiSearchForm"]/table[4]/tbody/tr/td[4]', //課外活動の掲示の更新日時（すべて）
+    club_info_update_time_latest: '//*[@id="keijiSearchForm"]/table[4]/tbody/tr[1]/td[4]', //課外活動の掲示の更新日時（最新のみ）
+    club_info_latest_link: '//*[@id="keijiSearchForm"]/table[4]/tbody/tr[1]/td[1]/p[2]/a', //課外活動の掲示へのリンク（最新のみ）
     notice_title: "//span[@class='keiji-title']", //掲示タイトル
     notice_description: "//div[@class='keiji-naiyo']", //掲示内容
-    notice_date: "//table[2]/tbody/tr[2]/td", //掲載日時
+    notice_time: "//table[2]/tbody/tr[2]/td", //掲載日時
     notice_files: "//table[3]/tbody/tr/td/a", //すべての添付ファイルへのリンク群
 };
 
@@ -65,25 +65,35 @@ const fetch_file = async (x, y, page) => {
     return true;
 };
 
-const post_webhook = async (webhook_url) => {
+const post_webhook = async (webhook_url, [notice_title = "掲示タイトル", notice_description = "掲示内容", notice_time = "更新時刻"], attached_file_flag) => {
     try {
+        const file_texts = (attached_file_flag == false) ? "添付ファイルは存在しないようです" : "添付ファイルがあるようです。掲示板を開いてダウンロードしてください";
+        const webhook_body = { //Webhookに送信するデータ本体
+            "username": 'LOYOLA更新情報',
+            "avatar_url": 'https://static.selelab.com/favicon.ico',
+            "content": `LOYOLAに新しい課外活動情報が掲示されました！\n${file_texts}`,
+            "embeds": [{
+                "title": notice_title,
+                "description": notice_description,
+                "footer": {
+                    "text": notice_time
+                }
+            }]
+        };
         const response = await fetch(webhook_url,
             {
                 method: 'POST',
                 headers: { //ヘッダ
-                    'Content-type': 'multipart/form-data',
+                    // 'Accept': 'application/json',
+                    'Content-type': 'application/json',
                 },
-                body: { //Webhookに送信するデータ本体
-                    username: 'LOYOLA更新情報',
-                    avatar_url: 'https://static.selelab.com/favicon.ico',
-                    content: `LOYOLAに新しい課外活動情報が掲示されました！`
-                }
+                body: JSON.stringify(webhook_body)
             }
         );
         if (!response.ok) {
             throw new Error(`${response.status} ${response.statusText} ${await response.text()}`);
         }
-        console.log(await response.json());
+        // console.log(await response.json());
     } catch (e) {
         console.log(e);
         return false;
@@ -141,34 +151,44 @@ const loyola_scraper = async (browser) => {
 
         /* ここから大学掲示板の課外活動掲示一覧での操作に突入 */
         const prev_info_date = fs.readFileSync(setting.date_temp_file_path, 'utf-8'); //最後に取得した課外活動掲示の時刻情報をファイルから読み込む
-        
-        console.log(prev_info_date);
-        const clubInfoTimesHandle = await newPage.$x(loyola_xpath.club_info_update_times);
-        for (const data of clubInfoTimesHandle) {
-            console.log(
-                await (await data.getProperty("innerText")).jsonValue()
-            );
-        }
-
         const clubInfoLatestTimeHandle = await newPage.$x(loyola_xpath.club_info_update_time_latest);
         const latest_info_date = await (await clubInfoLatestTimeHandle[0].getProperty("innerText")).jsonValue();
-        await fs.writeFile(setting.date_temp_file_path, latest_info_date, (e) => {
-            if (e) throw new Error('file writing failed:' + e);
-        }); //最後に取得した課外活動掲示の時刻情報をファイルへ書き出す
-        if (Date.parse(latest_info_date) !== Date.parse(prev_info_date)) {
+
+        if (Date.parse(latest_info_date) == Date.parse(prev_info_date)) {
             //前回に掲示板を確認した時より後に、新しく掲示が出てた時の処理
 
             await fs.writeFile(setting.date_temp_file_path, latest_info_date, (e) => {
                 if (e) throw new Error('file writing failed:' + e);
             }); //最後に取得した課外活動掲示の時刻情報をファイルへ書き出す
 
+            const linkToLatestClubInfo_Handle = await newPage.$x(loyola_xpath.club_info_latest_link);
+            await Promise.all([
+                newPage.waitForNavigation(), //画面遷移を待ち受ける
+                linkToLatestClubInfo_Handle[0].click(), //最新の課外活動掲示へのリンクをクリック
+            ]);
+
+            const attachedFile_Handle = await newPage.$x(loyola_xpath.notice_files);
+            const attached_file_exists = (await attachedFile_Handle[0] == undefined) ? false : true; //添付ファイルが存在するか否かのフラグ
+
+            const noticeTitle_Handle = newPage.$x(loyola_xpath.notice_title);
+            const noticeDescription_Handle = newPage.$x(loyola_xpath.notice_description);
+            const noticeTime_Handle = newPage.$x(loyola_xpath.notice_time);
+
+            const notice_info = [
+                await (await (await noticeTitle_Handle)[0].getProperty("innerText")).jsonValue(), //掲示タイトル
+                await (await (await noticeDescription_Handle)[0].getProperty("innerText")).jsonValue(), //掲示内容
+                await (await (await noticeTime_Handle)[0].getProperty("innerText")).jsonValue() //更新時刻
+            ];
+
+            await post_webhook(setting.discord_webhook_url, notice_info, attached_file_exists);
+            console.log(notice_info);
 
         } //更新が来てなかったら何もしない
 
         /* LOYOLAからログアウト */
         await mouse_click(700, 20, page); //メニューバーの"ログアウト"を押す
         await mouse_click(400, 410, page); //"ログアウトしました"で"OK"ボタンを押す
-        console.log('logout: successed');
+        console.log('ログアウト完了');
 
     } catch (e) {
         console.log(e);
