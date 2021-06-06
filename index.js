@@ -1,4 +1,5 @@
 const puppeteer = require('puppeteer');
+const axios = require('axios');
 const fs = require('fs');
 const setting = require('./setting.json');
 
@@ -11,7 +12,7 @@ const loyola_xpath = {
     link_from_main_board_to_univ_bulletin_board: '/html/body/table[3]/tbody/tr[7]/td[1]/a', //掲示板ホームから大学掲示板へのリンク
     club_info_links: "//td[contains(*, '課外活動')]/p[2]/a", //大学掲示板の中にある課外活動情報へのリンク
     club_info_update_times: '//*[@id="keijiSearchForm"]/table[4]/tbody/tr/td[4]', //課外活動の情報の更新日時（すべて）
-    club_info_update_time_most_recent: '//*[@id="keijiSearchForm"]/table[4]/tbody/tr[1]/td[4]', //課外活動の情報の更新日時（最新のみ）
+    club_info_update_time_latest: '//*[@id="keijiSearchForm"]/table[4]/tbody/tr[1]/td[4]', //課外活動の情報の更新日時（最新のみ）
     notice_title: "//span[@class='keiji-title']", //掲示タイトル
     notice_description: "//div[@class='keiji-naiyo']", //掲示内容
     notice_date: "//table[2]/tbody/tr[2]/td", //掲載日時
@@ -64,8 +65,24 @@ const fetch_file = async (x, y, page) => {
     return true;
 };
 
-const post_webhook = async () => {
-    
+const post_webhook = async (webhook_url) => {
+    try {
+        const config = { //ヘッダーなどの設定
+            headers: {
+                'Content-type': 'multipart/form-data',
+            }
+        };
+        const post_data = { //送信するデータ
+            username: 'LOYOLA更新情報',
+            avatar_url: 'https://static.selelab.com/favicon.ico',
+            content: `LOYOLAに新しい課外活動情報が掲示されました！`
+        };
+
+        const response = await axios.post(webhook_url, post_data, config);
+        console.log(response);
+    } catch (e) {
+        console.log(e);
+    }
 };
 
 const loyola_scraper = async (browser) => {
@@ -116,12 +133,27 @@ const loyola_scraper = async (browser) => {
         await mouse_click(25, 230, newPage); //検索ボタンを押す
         await newPage.waitForTimeout(2000);//画面遷移待ち
 
+        /* ここから大学掲示板の課外活動掲示一覧での操作に突入 */
+        const prev_info_date = fs.readFileSync(setting.date_temp_file_path, 'utf-8'); //最後に取得した課外活動掲示の情報を取得
+        console.log(prev_info_date);
+
         const clubInfoTimesHandle = await newPage.$x(loyola_xpath.club_info_update_times);
         for (const data of clubInfoTimesHandle) {
             console.log(
                 await (await data.getProperty("innerText")).jsonValue()
             );
         }
+
+        const clubInfoLatestTimeHandle = await newPage.$x(loyola_xpath.club_info_update_time_latest);
+        const latest_info_date = await (await clubInfoLatestTimeHandle[0].getProperty("innerText")).jsonValue();
+        await fs.writeFile(setting.date_temp_file_path, latest_info_date, (e) => {
+            if (e) throw new Error('file writing failed:' + e);
+        }); //最後に取得した課外活動掲示の情報を上書き
+
+        /* LOYOLAからログアウト */
+        await mouse_click(700, 20, page); //メニューバーの"ログアウト"を押す
+        await mouse_click(400, 410, page); //"ログアウトしました"で"OK"ボタンを押す
+        console.log('logout: successed');
 
     } catch (e) {
         console.log(e);
@@ -133,9 +165,9 @@ const loyola_scraper = async (browser) => {
 (async () => {
     const browser = await puppeteer.launch({
         defaultViewport: { width: 1000, height: 1000 },
-        // headless: true,
-        headless: false,
-        slowMo: 50
+        headless: true,
+        // headless: false,
+        slowMo: 100
     });
 
     await loyola_scraper(browser);
