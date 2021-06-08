@@ -1,7 +1,16 @@
 const puppeteer = require('puppeteer');
 const fetch = require('node-fetch');
 const fs = require('fs');
-const setting = require('./settings/setting.json');
+
+require('dotenv').config({ path: "./settings/.env" });
+
+const setting = {
+    loyola_id: process.env.LOYOLA_ID,
+    loyola_password: process.env.LOYOLA_PASSWORD,
+    loyola_uri: process.env.LOYOLA_URI,
+    discord_webhook_url: process.env.DISCORD_WEBHOOK_URL,
+    previous_update_time: process.env.PREVIOUS_UPDATE_TIME
+};
 
 const loyola_xpath = {
     login_username: '//input[@name="userName"]',
@@ -98,6 +107,7 @@ const post_webhook = async (webhook_url, [notice_title = "掲示タイトル", n
         console.log(e);
         return false;
     }
+    console.log('webhook送信完了');
     return true;
 };
 
@@ -150,16 +160,15 @@ const loyola_scraper = async (browser) => {
         await newPage.waitForTimeout(2000);//画面遷移待ち
 
         /* ここから大学掲示板の課外活動掲示一覧での操作に突入 */
-        const prev_info_date = fs.readFileSync(setting.date_temp_file_path, 'utf-8'); //最後に取得した課外活動掲示の時刻情報をファイルから読み込む
+        const prev_info_date = setting.previous_update_time; //最後に取得した課外活動掲示の時刻情報を環境変数から読み込む
         const clubInfoLatestTimeHandle = await newPage.$x(loyola_xpath.club_info_update_time_latest);
         const latest_info_date = await (await clubInfoLatestTimeHandle[0].getProperty("innerText")).jsonValue();
 
         if (Date.parse(latest_info_date) !== Date.parse(prev_info_date)) {
             //前回に掲示板を確認した時より後に、新しく掲示が出てた時の処理
 
-            await fs.writeFile(setting.date_temp_file_path, latest_info_date, (e) => {
-                if (e) throw new Error('file writing failed:' + e);
-            }); //最後に取得した課外活動掲示の時刻情報をファイルへ書き出す
+            console.log('新しい課外活動掲示が見つかりました');
+            process.env.PREVIOUS_UPDATE_TIME = latest_info_date; //最後に取得した課外活動掲示の時刻情報を環境変数へ書き出す
 
             const linkToLatestClubInfo_Handle = await newPage.$x(loyola_xpath.club_info_latest_link);
             await Promise.all([
@@ -181,9 +190,12 @@ const loyola_scraper = async (browser) => {
             ];
 
             await post_webhook(setting.discord_webhook_url, notice_info, attached_file_exists); //webhook送信
-            console.log(notice_info);
+            // console.log(notice_info);
 
-        } //更新が来てなかったら何もしない
+        } else {
+            //更新が来てなかったら何もしない
+            console.log('新しい課外活動掲示が見つかりませんでした');
+        }
 
         /* LOYOLAからログアウト */
         await mouse_click(700, 20, page); //メニューバーの"ログアウト"を押す

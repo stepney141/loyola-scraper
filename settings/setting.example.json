@@ -2,7 +2,6 @@
     "loyola_id": "A1234567",
     "loyola_password": "abcdefg1234567",
     "loyola_uri": "https://scs.cl.sophia.ac.jp/campusweb/campusportal.do",
-    "download_path": "./downloads",
     "discord_webhook_url": "https://discord.com/api/webhooks/1234567890/abcdef_ghijklmnop_qrstuvwxy_z",
-    "date_temp_file_path": "./settings/previous_latest_date.txt"
+    "previous_update_time": "2021/06/04 14:05:34"
 }
