@@ -133,7 +133,7 @@ const loyola_scraper = async (browser) => {
         
         await Promise.all([
             page.waitForNavigation({ //画面遷移待ち
-                timeout: 60000,
+                timeout: 120000,
                 waitUntil: "networkidle0",
             }),
             (await loginButtonHandle)[0].click() //ログインボタンを押す
@@ -148,7 +148,7 @@ const loyola_scraper = async (browser) => {
         const pageTarget = page.target(); //新規タブのopenerを保存
         await mouse_click(600, 100, page); //掲示板メニューを開く
         const [newTarget] = await Promise.all([
-            browser.waitForTarget(target => target.opener() === pageTarget), //新規タブが開いたか確認
+            browser.waitForTarget(target => target.opener() === pageTarget, { timeout: 120000 }), //新規タブが開いたか確認
             mouse_click(50, 140, page) //リンクをクリックして掲示板本体へ飛ぶ（新規タブが開く）
         ]);
         const newPage = await newTarget.page(); //新規タブを作成
@@ -162,13 +162,15 @@ const loyola_scraper = async (browser) => {
         console.log('掲示板の走査を開始します');
 
         await Promise.all([
-            newPage.waitForNavigation(),
+            newPage.waitForNavigation({ timeout: 120000 }),
             mouse_click(40, 380, newPage), //詳細検索
         ]);
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
+        await newPage.waitForTimeout(3000);
         await newPage.select('select#category2', '16'); //カテゴリ2の「課外活動」を選択
+        await newPage.waitForTimeout(3000);
         await mouse_click(25, 230, newPage); //検索ボタンを押す
-        await newPage.waitForTimeout(2000);//画面遷移待ち
+        await newPage.waitForTimeout(3000);//画面遷移待ち
 
         /* ここから大学掲示板の課外活動掲示一覧での操作に突入 */
 
@@ -220,6 +222,7 @@ const loyola_scraper = async (browser) => {
 
         /* LOYOLAからログアウト */
         await mouse_click(700, 20, page); //メニューバーの"ログアウト"を押す
+        await newPage.waitForTimeout(3000);
         await mouse_click(400, 410, page); //"ログアウトしました"で"OK"ボタンを押す
         console.log('Loyolaログアウト完了');
 
