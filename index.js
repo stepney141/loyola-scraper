@@ -148,15 +148,17 @@ const loyola_scraper = async (browser) => {
         ref: https://github.com/puppeteer/puppeteer/issues/3718#issuecomment-451325093
         */
         const pageTarget = page.target(); //新規タブのopenerを保存
-        await mouse_click(50, 140, page); //リンクをクリックして掲示板本体へ飛ぶ（新規タブが開く）
-        const newTarget = await browser.waitForTarget(target => target.opener() === pageTarget); //新規タブが開いたか確認
+        const [newTarget] = await Promise.all([
+            browser.waitForTarget(target => target.opener() === pageTarget), //新規タブが開いたか確認
+            mouse_click(50, 140, page) //リンクをクリックして掲示板本体へ飛ぶ（新規タブが開く）
+        ]);
         const newPage = await newTarget.page(); //新規タブを作成
-        
+
         await newPage.evaluateOnNewDocument(() => { //webdriver.navigatorを消して自動操縦であることを隠す
             Object.defineProperty(navigator, 'webdriver', ()=>{});
             delete navigator.__proto__.webdriver;
         });
-        await newPage.waitForSelector("body"); //新規タブの画面遷移待ち
+        // await newPage.waitForSelector("body"); //新規タブの画面遷移待ち
 
         console.log('掲示板の走査を開始します');
 
@@ -229,8 +231,8 @@ const loyola_scraper = async (browser) => {
 (async () => {
     const browser = await puppeteer.launch({
         defaultViewport: { width: 1000, height: 1000 },
-        headless: true,
-        // headless: false,
+        // headless: true,
+        headless: false,
         slowMo: 100
     });
 
