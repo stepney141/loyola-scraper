@@ -141,13 +141,12 @@ const loyola_scraper = async (browser) => {
 
         console.log('Loyolaログイン完了');
 
-        await mouse_click(600, 100, page); //掲示板メニューを開く
-
         /*
         target="_blank"で開いた新規タブへの切り替え
         ref: https://github.com/puppeteer/puppeteer/issues/3718#issuecomment-451325093
         */
         const pageTarget = page.target(); //新規タブのopenerを保存
+        await mouse_click(600, 100, page); //掲示板メニューを開く
         const [newTarget] = await Promise.all([
             browser.waitForTarget(target => target.opener() === pageTarget), //新規タブが開いたか確認
             mouse_click(50, 140, page) //リンクをクリックして掲示板本体へ飛ぶ（新規タブが開く）
@@ -162,7 +161,10 @@ const loyola_scraper = async (browser) => {
 
         console.log('掲示板の走査を開始します');
 
-        await mouse_click(40, 380, newPage); //詳細検索
+        await Promise.all([
+            newPage.waitForNavigation(),
+            mouse_click(40, 380, newPage), //詳細検索
+        ]);
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
         await newPage.select('select#category2', '16'); //カテゴリ2の「課外活動」を選択
         await mouse_click(25, 230, newPage); //検索ボタンを押す
@@ -233,7 +235,7 @@ const loyola_scraper = async (browser) => {
         defaultViewport: { width: 1000, height: 1000 },
         headless: true,
         // headless: false,
-        slowMo: 100
+        slowMo: 300
     });
 
     await loyola_scraper(browser);
