@@ -130,12 +130,14 @@ const loyola_scraper = async (browser) => {
 
         await (await userNameInputHandle)[0].type(setting.loyola_id); //学籍番号入力
         await (await passwordInputHandle)[0].type(setting.loyola_password); //パスワード入力
-        await (await loginButtonHandle)[0].click(); //ログインボタンを押す
         
-        await page.waitForNavigation({ //画面遷移待ち
-            timeout: 60000,
-            waitUntil: "networkidle0",
-        });
+        await Promise.all([
+            page.waitForNavigation({ //画面遷移待ち
+                timeout: 60000,
+                waitUntil: "networkidle0",
+            }),
+            (await loginButtonHandle)[0].click() //ログインボタンを押す
+        ]);
 
         console.log('Loyolaログイン完了');
 
