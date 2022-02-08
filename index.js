@@ -231,8 +231,8 @@ const loyola_scraper = async (browser) => {
 (async () => {
     const browser = await puppeteer.launch({
         defaultViewport: { width: 1000, height: 1000 },
-        // headless: true,
-        headless: false,
+        headless: true,
+        // headless: false,
         slowMo: 100
     });
 
