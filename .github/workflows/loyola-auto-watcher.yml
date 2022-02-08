@@ -1,6 +1,7 @@
 name: Loyola Automatic Watcher
 
 on:
+  push:
   schedule:
       - cron: "0 * * * *"
       # 毎時00分に起動
