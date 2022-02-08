@@ -1,0 +1,53 @@
+name: Loyola Automatic Watcher
+
+on:
+  schedule:
+      - cron: "0 * * * *"
+      # 毎時00分に起動
+      # 夜間は実行しなくてもいい気はするが、念の為昼夜問わず実行するようにしておく
+
+jobs:
+  Watcher:
+    runs-on: ubuntu-latest
+
+    env:
+      LOYOLA_ID: ${{ secrets.LOYOLA_ID }}
+      LOYOLA_PASSWORD: ${{ secrets.LOYOLA_PASSWORD }}
+      LOYOLA_URI: ${{ secrets.LOYOLA_URI }}
+      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Use Node.js 14.x
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14.x'
+        cache: 'yarn'
+    
+    - name: Install dependencies
+      run: yarn install
+
+    - name: Create dotenv file
+      shell: bash
+      working-directory: ./settings
+      run: touch .env | 
+        echo "LOYOLA_ID=${{ secrets.LOYOLA_ID }}" >> .env
+        echo "LOYOLA_PASSWORD=${{ secrets.LOYOLA_PASSWORD }}" >> .env
+        echo "LOYOLA_URI=${{ secrets.LOYOLA_URI }}" >> .env
+        echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
+
+    - name: Watch Loyola
+      shell: bash
+      run: node ./index.js
+
+    - name: Set the current datetime
+      env:
+        TZ: 'Asia/Tokyo'
+      run: echo "CURRENT_DATETIME=$(date --iso-8601=minutes)" >> $GITHUB_ENV
+    
+    - name: Git Auto Commit
+      uses: stefanzweifel/git-auto-commit-action@v4
+      with: 
+        commit_message: 'updated: ${{ env.CURRENT_DATETIME }}'
+        branch: automated-actions
