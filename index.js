@@ -240,9 +240,18 @@ const loyola_scraper = async (browser) => {
 (async () => {
     const browser = await puppeteer.launch({
         defaultViewport: { width: 1000, height: 1000 },
+        args: [
+            '--disable-gpu',
+            '--disable-dev-shm-usage',
+            '--disable-setuid-sandbox',
+            '--no-first-run',
+            '--no-sandbox',
+            '--no-zygote',
+            '--single-process'
+        ],
         headless: true,
         // headless: false,
-        slowMo: 300
+        slowMo: 100
     });
 
     await loyola_scraper(browser);
