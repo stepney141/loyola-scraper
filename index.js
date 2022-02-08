@@ -158,7 +158,7 @@ const loyola_scraper = async (browser) => {
             Object.defineProperty(navigator, 'webdriver', ()=>{});
             delete navigator.__proto__.webdriver;
         });
-        // await newPage.waitForSelector("body"); //新規タブの画面遷移待ち
+        await newPage.waitForSelector("body"); //新規タブの画面遷移待ち
 
         console.log('掲示板の走査を開始します');
 
