@@ -2,8 +2,8 @@ name: Loyola Automatic Watcher
 
 on:
   push:
-  schedule:
-      - cron: "0 * * * *"
+  # schedule:
+  #     - cron: "0 * * * *"
       # 毎時00分に起動
       # 夜間は実行しなくてもいい気はするが、念の為昼夜問わず実行するようにしておく
 
