@@ -147,12 +147,12 @@ const loyola_scraper = async (browser) => {
         */
         const pageTarget = page.target(); //新規タブのopenerを保存
         await mouse_click(600, 100, page); //掲示板メニューを開く
-        const [newTarget] = await Promise.all([
+        const [newPage] = await Promise.all([
             // browser.waitForTarget(target => target.opener() === pageTarget, { timeout: 120000 }), //新規タブが開いたか確認
             new Promise(resolve => page.once('popup', resolve)),
             mouse_click(50, 140, page) //リンクをクリックして掲示板本体へ飛ぶ（新規タブが開く）
         ]);
-        const newPage = await newTarget.page(); //新規タブを作成
+        // const newPage = await newTarget.page(); //新規タブを作成
 
         await newPage.evaluateOnNewDocument(() => { //webdriver.navigatorを消して自動操縦であることを隠す
             Object.defineProperty(navigator, 'webdriver', ()=>{});
