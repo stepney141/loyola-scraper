@@ -2,4 +2,5 @@ node_modules
 /settings/*
 !/settings/setting.example.json
 !/settings/.env.example
-# /settings/setting.example.jsonだけは無視しないが、同ディレクトリ以下の他のファイルは無視する
+!/settings/previous_update_time.txt
+# 無視しないファイルをホワイトリスト形式で選択する

@@ -2,6 +2,5 @@
     "loyola_id": "A1234567",
     "loyola_password": "abcdefg1234567",
     "loyola_uri": "https://scs.cl.sophia.ac.jp/campusweb/campusportal.do",
-    "discord_webhook_url": "https://discord.com/api/webhooks/1234567890/abcdef_ghijklmnop_qrstuvwxy_z",
-    "previous_update_time": "2021/06/04 14:05:34"
+    "discord_webhook_url": "https://discord.com/api/webhooks/1234567890/abcdef_ghijklmnop_qrstuvwxy_z"
 }

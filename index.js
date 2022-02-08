@@ -1,16 +1,17 @@
 const puppeteer = require('puppeteer');
 const fetch = require('node-fetch');
-const fs = require('fs');
+const fs = require('fs').promises;
 
-// require('dotenv').config({ path: "./settings/.env" });
+require('dotenv').config({ path: "./settings/.env" });
 
 const setting = {
     loyola_id: process.env.LOYOLA_ID,
     loyola_password: process.env.LOYOLA_PASSWORD,
     loyola_uri: process.env.LOYOLA_URI,
     discord_webhook_url: process.env.DISCORD_WEBHOOK_URL,
-    previous_update_time: process.env.PREVIOUS_UPDATE_TIME
 };
+
+const datetime_log_filepath = "./settings/previous_update_time.txt";
 
 const loyola_xpath = {
     login_username: '//input[@name="userName"]',
@@ -136,6 +137,8 @@ const loyola_scraper = async (browser) => {
             waitUntil: "networkidle0",
         });
 
+        console.log('Loyolaログイン完了');
+
         await mouse_click(600, 100, page); //掲示板メニューを開く
 
         await mouse_click(50, 140, page); //掲示板本体へ飛ぶ（新規タブが開く）
@@ -153,6 +156,8 @@ const loyola_scraper = async (browser) => {
         });
         await newPage.waitForSelector("body"); //新規タブの画面遷移待ち
 
+        console.log('掲示板の走査を開始します');
+
         await mouse_click(40, 380, newPage); //詳細検索
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
         await newPage.select('select#category2', '16'); //カテゴリ2の「課外活動」を選択
@@ -160,15 +165,25 @@ const loyola_scraper = async (browser) => {
         await newPage.waitForTimeout(2000);//画面遷移待ち
 
         /* ここから大学掲示板の課外活動掲示一覧での操作に突入 */
-        const prev_info_date = setting.previous_update_time; //最後に取得した課外活動掲示の時刻情報を環境変数から読み込む
-        const clubInfoLatestTimeHandle = await newPage.$x(loyola_xpath.club_info_update_time_latest);
-        const latest_info_date = await (await clubInfoLatestTimeHandle[0].getProperty("innerText")).jsonValue();
 
-        if (Date.parse(latest_info_date) !== Date.parse(prev_info_date)) {
+        const prev_info_datetime = await fs.readFile(datetime_log_filepath, "utf-8"); //最後に取得した課外活動掲示の時刻情報を環境変数から読み込む
+        
+        const clubInfoLatestTimeHandle = await newPage.$x(loyola_xpath.club_info_update_time_latest);
+        const latest_info_datetime = await (await clubInfoLatestTimeHandle[0].getProperty("innerText")).jsonValue();
+
+        if (Date.parse(latest_info_datetime) !== Date.parse(prev_info_datetime)) {
             //前回に掲示板を確認した時より後に、新しく掲示が出てた時の処理
 
             console.log('新しい課外活動掲示が見つかりました');
-            process.env.PREVIOUS_UPDATE_TIME = latest_info_date; //最後に取得した課外活動掲示の時刻情報を環境変数へ書き出す
+
+            //最後に取得した課外活動掲示の時刻情報をファイルへ書き出す
+            await fs.writeFile(
+                datetime_log_filepath,
+                latest_info_datetime,
+                (e) => {
+                    if (e) console.log("error: ", e);
+                }
+            );
 
             const linkToLatestClubInfo_Handle = await newPage.$x(loyola_xpath.club_info_latest_link);
             await Promise.all([
@@ -200,7 +215,7 @@ const loyola_scraper = async (browser) => {
         /* LOYOLAからログアウト */
         await mouse_click(700, 20, page); //メニューバーの"ログアウト"を押す
         await mouse_click(400, 410, page); //"ログアウトしました"で"OK"ボタンを押す
-        console.log('ログアウト完了');
+        console.log('Loyolaログアウト完了');
 
     } catch (e) {
         console.log(e);
