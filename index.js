@@ -1,8 +1,8 @@
 const puppeteer = require('puppeteer');
 const fetch = require('node-fetch');
 const fs = require('fs').promises;
-
-require('dotenv').config({ path: "./settings/.env" });
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, "./settings/.env") });
 
 const setting = {
     loyola_id: process.env.LOYOLA_ID,
