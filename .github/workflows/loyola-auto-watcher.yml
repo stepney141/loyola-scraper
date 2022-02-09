@@ -27,9 +27,9 @@ jobs:
         cache: 'yarn'
     
     - name: Install dependencies
-      run: yarn install | 
-        sudo apt-get update
-        sudo apt-get install -y xvfb
+      run: yarn install
+      
+    - run: sudo apt-get update &&sudo apt-get install -y xvfb
 
     - name: Create dotenv file
       shell: bash
