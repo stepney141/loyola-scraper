@@ -122,7 +122,7 @@ const loyola_scraper = async (browser) => {
 
         await page.goto(setting.loyola_uri, { //LOYOLAトップページに飛ぶ
             timeout: 180000,
-            waitUntil: "networkidle0",
+            waitUntil: 'domcontentloaded',
         });
 
         const userNameInputHandle = page.$x(loyola_xpath.login_username);
@@ -135,7 +135,7 @@ const loyola_scraper = async (browser) => {
         await Promise.all([
             page.waitForNavigation({ //画面遷移待ち
                 timeout: 180000,
-                waitUntil: "networkidle0",
+                waitUntil: 'domcontentloaded',
             }),
             (await loginButtonHandle)[0].click() //ログインボタンを押す
         ]);
@@ -164,7 +164,10 @@ const loyola_scraper = async (browser) => {
         console.log('掲示板の走査を開始します');
 
         await Promise.all([
-            newPage.waitForNavigation({ timeout: 180000 }),
+            newPage.waitForNavigation({ 
+                waitUntil: 'domcontentloaded',
+                timeout: 180000
+            }),
             mouse_click(40, 380, newPage), //詳細検索
         ]);
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
@@ -247,7 +250,7 @@ const loyola_scraper = async (browser) => {
             '--no-first-run',
             '--no-sandbox',
             '--no-zygote',
-            '--single-process'
+            // '--single-process'
         ],
         headless: true,
         // headless: false,
