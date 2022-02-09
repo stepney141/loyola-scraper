@@ -167,7 +167,7 @@ const loyola_scraper = async (browser) => {
             waitUntil: 'domcontentloaded',
             timeout: 180000
         });
-        
+
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
         await newPage.waitForTimeout(5000);
         await newPage.select('select#category2', '16'); //カテゴリ2の「課外活動」を選択
@@ -251,8 +251,8 @@ const loyola_scraper = async (browser) => {
             '--no-zygote',
             // '--single-process'
         ],
-        // headless: true,
-        headless: false,
+        headless: true,
+        // headless: false,
         slowMo: 100
     });
 
