@@ -179,11 +179,13 @@ const loyola_scraper = async (browser) => {
 
         console.log('掲示板の走査を開始します');
 
-        mouse_click(40, 380, newPage), //詳細検索
-        await newPage.waitForNavigation({ 
-            waitUntil: 'domcontentloaded',
+        await Promise.all([
+            newPage.waitForNavigation({ 
+                waitUntil: 'networkidle0',
             // timeout: 180000
-        });
+            }),
+            mouse_click(40, 380, newPage), //詳細検索
+        ]);
 
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
         await newPage.waitForTimeout(5000);
