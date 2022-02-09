@@ -138,7 +138,7 @@ const loyola_scraper = async (browser) => {
         });
 
         await page.goto(setting.loyola_uri, { //LOYOLAトップページに飛ぶ
-            timeout: 180000,
+            // timeout: 180000,
             waitUntil: 'domcontentloaded',
         });
 
@@ -151,7 +151,7 @@ const loyola_scraper = async (browser) => {
         
         await Promise.all([
             page.waitForNavigation({ //画面遷移待ち
-                timeout: 180000,
+                // timeout: 180000,
                 waitUntil: 'domcontentloaded',
             }),
             (await loginButtonHandle)[0].click() //ログインボタンを押す
@@ -182,7 +182,7 @@ const loyola_scraper = async (browser) => {
         mouse_click(40, 380, newPage), //詳細検索
         await newPage.waitForNavigation({ 
             waitUntil: 'domcontentloaded',
-            timeout: 180000
+            // timeout: 180000
         });
 
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
@@ -190,7 +190,9 @@ const loyola_scraper = async (browser) => {
         await newPage.select('select#category2', '16'); //カテゴリ2の「課外活動」を選択
         await newPage.waitForTimeout(2000);
         await Promise.all([
-            newPage.waitForNavigation({ timeout: 180000 }), //画面遷移待ち
+            newPage.waitForNavigation({ 
+                // timeout: 180000
+            }), //画面遷移待ち
             mouse_click(25, 230, newPage) //検索ボタンを押す
         ]);
 
