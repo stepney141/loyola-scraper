@@ -180,16 +180,17 @@ const loyola_scraper = async (browser) => {
         console.log('掲示板の走査を開始します');
 
         await Promise.all([
-            newPage.waitForXPath('//b[contains(text(), "検索条件を入力してください")]', {
-                waitUntil: ["domcontentloaded", "networkidle0"],
-            }),
+            newPage.waitForResponse( async (response) => response.url().includes('https://scs.cl.sophia.ac.jp/campusweb/campussquare.do?_flowExecutionKey=')
+                && response.status() === 200
+                && (await response.text()).includes('掲示板／掲示情報検索')
+            ),
             mouse_click(40, 380, newPage), //詳細検索
         ]);
 
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
-        await newPage.waitForTimeout(5000);
+        await newPage.waitForTimeout(3000);
         await newPage.select('select#category2', '16'); //カテゴリ2の「課外活動」を選択
-        await newPage.waitForTimeout(2000);
+        await newPage.waitForTimeout(3000);
         await Promise.all([
             newPage.waitForNavigation({
                 waitUntil: ["domcontentloaded", "networkidle0"],
@@ -275,7 +276,7 @@ const loyola_scraper = async (browser) => {
         ],
         headless: true,
         // headless: false,
-        slowMo: 500
+        // slowMo: 500
     });
 
     await loyola_scraper(browser);
