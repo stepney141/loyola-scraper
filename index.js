@@ -144,16 +144,15 @@ const loyola_scraper = async (browser) => {
 
         /*
         target="_blank"で開いた新規タブへの切り替え
-        ref: https://github.com/puppeteer/puppeteer/issues/3718#issuecomment-451325093
+        ref:
+        https://github.com/puppeteer/puppeteer/issues/3718#issuecomment-451325093
+        https://scrapbox.io/hiroxto/Puppeteer%E3%81%A7target=%22_blank%22%E3%81%8C%E9%96%8B%E3%81%8F%E3%81%AE%E3%82%92%E5%BE%85%E3%81%A4
         */
-        const pageTarget = page.target(); //新規タブのopenerを保存
         await mouse_click(600, 100, page); //掲示板メニューを開く
         const [newPage] = await Promise.all([
-            // browser.waitForTarget(target => target.opener() === pageTarget, { timeout: 120000 }), //新規タブが開いたか確認
             new Promise(resolve => page.once('popup', resolve)),
             mouse_click(50, 140, page) //リンクをクリックして掲示板本体へ飛ぶ（新規タブが開く）
         ]);
-        // const newPage = await newTarget.page(); //新規タブを作成
 
         await newPage.evaluateOnNewDocument(() => { //webdriver.navigatorを消して自動操縦であることを隠す
             Object.defineProperty(navigator, 'webdriver', ()=>{});
@@ -163,13 +162,12 @@ const loyola_scraper = async (browser) => {
 
         console.log('掲示板の走査を開始します');
 
-        await Promise.all([
-            newPage.waitForNavigation({ 
-                waitUntil: 'domcontentloaded',
-                timeout: 180000
-            }),
-            mouse_click(40, 380, newPage), //詳細検索
-        ]);
+        mouse_click(40, 380, newPage), //詳細検索
+        await newPage.waitForNavigation({ 
+            waitUntil: 'domcontentloaded',
+            timeout: 180000
+        });
+        
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
         await newPage.waitForTimeout(5000);
         await newPage.select('select#category2', '16'); //カテゴリ2の「課外活動」を選択
@@ -228,8 +226,9 @@ const loyola_scraper = async (browser) => {
         }
 
         /* LOYOLAからログアウト */
+        await page.bringToFront(); //タブ切り替え
         await mouse_click(700, 20, page); //メニューバーの"ログアウト"を押す
-        await newPage.waitForTimeout(3000);
+        await page.waitForTimeout(3000);
         await mouse_click(400, 410, page); //"ログアウトしました"で"OK"ボタンを押す
         console.log('Loyolaログアウト完了');
 
@@ -252,8 +251,8 @@ const loyola_scraper = async (browser) => {
             '--no-zygote',
             // '--single-process'
         ],
-        headless: true,
-        // headless: false,
+        // headless: true,
+        headless: false,
         slowMo: 100
     });
 
