@@ -1,5 +1,5 @@
 const puppeteer = require('puppeteer');
-const fetch = require('node-fetch');
+const axios = require('axios');
 const fs = require('fs').promises;
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, "./settings/.env") });
@@ -90,21 +90,38 @@ const post_webhook = async (webhook_url, [notice_title = "掲示タイトル", n
                 }
             }]
         };
-        const response = await fetch(webhook_url,
-            {
-                method: 'POST',
-                headers: { //ヘッダ
+        await axios.post(webhook_url,
+            { //ヘッダ
+                headers: {
                     // 'Accept': 'application/json',
                     'Content-type': 'application/json',
-                },
+                }
+            },
+            { //リクエストボディ
                 body: JSON.stringify(webhook_body)
             }
         );
-        if (!response.ok) {
-            throw new Error(`${response.status} ${response.statusText} ${await response.text()}`);
-        }
-        // console.log(await response.json());
     } catch (e) {
+        // ref: https://gist.github.com/fgilio/230ccd514e9381fafa51608fcf137253
+        if (e.response) {
+            /*
+             * The request was made and the server responded with a
+             * status code that falls out of the range of 2xx
+             */
+            console.log(e.response.data);
+            console.log(e.response.status);
+            console.log(e.response.headers);
+        } else if (e.request) {
+            /*
+             * The request was made but no response was received, `e.request`
+             * is an instance of XMLHttpRequest in the browser and an instance
+             * of http.ClientRequest in Node.js
+             */
+            console.log(e.request);
+        } else {
+            // Something happened in setting up the request and triggered an Error
+            console.log('Error', e.message);
+        }
         console.log(e);
         return false;
     }
