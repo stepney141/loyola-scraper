@@ -90,18 +90,19 @@ const post_webhook = async (webhook_url, [notice_title = "掲示タイトル", n
                 }
             }]
         };
-        await axios.post(webhook_url,
-            { //ヘッダ
-                headers: {
+        await axios(
+            {
+                method: 'post',
+                url: webhook_url,
+                headers: { //ヘッダ
                     // 'Accept': 'application/json',
                     'Content-type': 'application/json',
-                }
-            },
-            { //リクエストボディ
-                body: JSON.stringify(webhook_body)
+                },
+                data: JSON.stringify(webhook_body) //リクエストボディ
             }
         );
     } catch (e) {
+        console.log('webhook送信失敗');
         // ref: https://gist.github.com/fgilio/230ccd514e9381fafa51608fcf137253
         if (e.response) {
             /*
@@ -122,7 +123,6 @@ const post_webhook = async (webhook_url, [notice_title = "掲示タイトル", n
             // Something happened in setting up the request and triggered an Error
             console.log('Error', e.message);
         }
-        console.log(e);
         return false;
     }
     console.log('webhook送信完了');
@@ -270,7 +270,7 @@ const loyola_scraper = async (browser) => {
         ],
         headless: true,
         // headless: false,
-        slowMo: 100
+        // slowMo: 100
     });
 
     await loyola_scraper(browser);
