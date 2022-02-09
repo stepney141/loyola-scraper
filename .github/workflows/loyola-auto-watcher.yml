@@ -28,6 +28,7 @@ jobs:
     
     - name: Install dependencies
       run: yarn install
+      run: sudo apt-get install -y xvfb-run
 
     - name: Create dotenv file
       shell: bash
@@ -40,7 +41,7 @@ jobs:
 
     - name: Watch Loyola
       shell: bash
-      run: node ./index.js
+      run: xvfb-run --auto-servernum --server-args='-screen 0, 1600x900x24' node ./index.js
 
     - name: Set the current datetime
       env:

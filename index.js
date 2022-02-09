@@ -180,10 +180,11 @@ const loyola_scraper = async (browser) => {
         console.log('掲示板の走査を開始します');
 
         await Promise.all([
-            newPage.waitForResponse( async (response) => response.url().includes('https://scs.cl.sophia.ac.jp/campusweb/campussquare.do?_flowExecutionKey=')
+            newPage.waitForResponse( async (response) => {
+                return response.url().includes('https://scs.cl.sophia.ac.jp/campusweb/campussquare.do?_flowExecutionKey=')
                 && response.status() === 200
-                && (await response.text()).includes('掲示板／掲示情報検索')
-            ),
+                && (await response.text()).includes('掲示板／掲示情報検索');
+            }),
             mouse_click(40, 380, newPage), //詳細検索
         ]);
 
