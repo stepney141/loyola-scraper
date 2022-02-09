@@ -275,8 +275,8 @@ const loyola_scraper = async (browser) => {
             '--no-zygote',
             // '--single-process'
         ],
-        headless: true,
-        // headless: false,
+        // headless: true,
+        headless: false,
         // slowMo: 500
     });
 
