@@ -181,7 +181,7 @@ const loyola_scraper = async (browser) => {
 
         console.log('掲示板の走査を開始します');
 
-        await newPage.screenshot({ path: './test.png' });
+        // await newPage.screenshot({ path: './test.png' });
 
         await Promise.all([
             newPage.waitForResponse( async (response) => {

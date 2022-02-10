@@ -2,8 +2,8 @@ name: Loyola Automatic Watcher
 
 on:
   push:
-  # schedule:
-  #     - cron: "0 * * * *"
+  schedule:
+      - cron: "0 * * * *"
       # 毎時00分に起動
       # 夜間は実行しなくてもいい気はするが、念の為昼夜問わず実行するようにしておく
 
@@ -42,12 +42,16 @@ jobs:
 
     - name: Install Japanese fonts
       run: sudo apt install fonts-noto
+      # 文字化けを防ぐ生活の知恵
+      # https://qiita.com/zyyx-matsushita/items/c33f79e33f242395019e
 
     - name: Watch Loyola
       shell: bash
       env:
         LANG: "ja_JP.UTF-8"
       run: xvfb-run --auto-servernum --server-args='-screen 0, 1600x900x24' node ./index.js
+      # headless: falseで動かすための生活の知恵
+      # https://github.com/peterdanis/electron-puppeteer-demo/issues/171
 
     - name: Set the current datetime
       env:

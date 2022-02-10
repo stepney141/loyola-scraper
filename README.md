@@ -1,5 +1,7 @@
 # loyola-scraper
 
+[![Loyola Automatic Watcher](https://github.com/stepney141/loyola-scraper/actions/workflows/loyola-auto-watcher.yml/badge.svg)](https://github.com/stepney141/loyola-scraper/actions/workflows/loyola-auto-watcher.yml)
+
 ## これはなに
 
 - Loyola掲示板の課外活動情報をスクレイピングし、更新情報をDiscordにwebhookで送信するためのなにか
