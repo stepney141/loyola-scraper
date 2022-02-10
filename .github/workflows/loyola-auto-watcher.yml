@@ -40,8 +40,13 @@ jobs:
         echo "LOYOLA_URI=${{ secrets.LOYOLA_URI }}" >> .env
         echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
 
+    - name: Install Japanese fonts
+      run: sudo apt install fonts-noto
+
     - name: Watch Loyola
       shell: bash
+      env:
+        LANG: "ja_JP.UTF-8"
       run: xvfb-run --auto-servernum --server-args='-screen 0, 1600x900x24' node ./index.js
 
     - name: Set the current datetime
