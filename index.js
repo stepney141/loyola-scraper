@@ -171,6 +171,8 @@ const loyola_scraper = async (browser) => {
             mouse_click(50, 140, page) //リンクをクリックして掲示板本体へ飛ぶ（新規タブが開く）
         ]);
 
+        console.log('掲示板遷移完了');
+
         await newPage.evaluateOnNewDocument(() => { //webdriver.navigatorを消して自動操縦であることを隠す
             Object.defineProperty(navigator, 'webdriver', ()=>{});
             delete navigator.__proto__.webdriver;
@@ -187,6 +189,8 @@ const loyola_scraper = async (browser) => {
             }),
             mouse_click(40, 380, newPage), //詳細検索
         ]);
+
+        console.log('掲示板検索中');
 
         await newPage.select('select#category1', '12'); //カテゴリ1の「学生生活」を選択
         await newPage.waitForTimeout(3000);
