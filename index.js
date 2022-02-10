@@ -277,7 +277,8 @@ const loyola_scraper = async (browser) => {
         ],
         // headless: true,
         headless: false,
-        // slowMo: 500
+        timeout: 2 * 60 * 1000,
+        slowMo: 50
     });
 
     await loyola_scraper(browser);
