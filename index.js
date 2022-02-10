@@ -181,6 +181,8 @@ const loyola_scraper = async (browser) => {
 
         console.log('掲示板の走査を開始します');
 
+        await newPage.screenShot({ path: './test.png' });
+
         await Promise.all([
             newPage.waitForResponse( async (response) => {
                 return response.url().includes('https://scs.cl.sophia.ac.jp/campusweb/campussquare.do?_flowExecutionKey=')
