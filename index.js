@@ -4,11 +4,15 @@ const fs = require('fs').promises;
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, "./settings/.env") });
 
+const discord_webhooks = Object.keys(process.env)
+    .filter(key => key.includes('DISCORD_WEBHOOK'))
+    .map(key => process.env[key]); //環境変数を全走査してwebhook urlをすべて取得する
+
 const setting = {
     loyola_id: process.env.LOYOLA_ID,
     loyola_password: process.env.LOYOLA_PASSWORD,
     loyola_uri: process.env.LOYOLA_URI,
-    discord_webhook_url: process.env.DISCORD_WEBHOOK_URL,
+    discord_webhook_url: discord_webhooks,
 };
 
 const datetime_log_filepath = "./settings/previous_update_time.txt";
@@ -247,7 +251,9 @@ const loyola_scraper = async (browser) => {
                 await (await (await noticeTime_Handle)[0].getProperty("innerText")).jsonValue() //更新時刻
             ];
 
-            await post_webhook(setting.discord_webhook_url, notice_info, attached_file_exists); //webhook送信
+            for (const webhook_url of setting.discord_webhook_url) { //webhook送信
+                await post_webhook(webhook_url, notice_info, attached_file_exists);
+            }
             // console.log(notice_info);
 
         } else {

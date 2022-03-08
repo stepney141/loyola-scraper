@@ -3,8 +3,8 @@ name: Loyola Automatic Watcher
 on:
   push:
   schedule:
-      - cron: "0 * * * *"
-      # 毎時00分に起動
+      - cron: "0,30 * * * *"
+      # 毎時00分・30分に起動
       # 夜間は実行しなくてもいい気はするが、念の為昼夜問わず実行するようにしておく
 
 jobs:
@@ -15,7 +15,8 @@ jobs:
       LOYOLA_ID: ${{ secrets.LOYOLA_ID }}
       LOYOLA_PASSWORD: ${{ secrets.LOYOLA_PASSWORD }}
       LOYOLA_URI: ${{ secrets.LOYOLA_URI }}
-      DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+      DISCORD_WEBHOOK_URL_OF_ADMIN_SERVER: ${{ secrets.DISCORD_WEBHOOK_URL_OF_ADMIN_SERVER }}
+      DISCORD_WEBHOOK_URL_OF_PUBLIC_SERVER: ${{ secrets.DISCORD_WEBHOOK_URL_OF_PUBLIC_SERVER }}
 
     steps:
     - uses: actions/checkout@v2
@@ -28,8 +29,6 @@ jobs:
     
     - name: Install dependencies
       run: yarn install
-      
-    - run: sudo apt-get update &&sudo apt-get install -y xvfb
 
     - name: Create dotenv file
       shell: bash
@@ -38,10 +37,11 @@ jobs:
         echo "LOYOLA_ID=${{ secrets.LOYOLA_ID }}" >> .env
         echo "LOYOLA_PASSWORD=${{ secrets.LOYOLA_PASSWORD }}" >> .env
         echo "LOYOLA_URI=${{ secrets.LOYOLA_URI }}" >> .env
-        echo "DISCORD_WEBHOOK_URL=${{ secrets.DISCORD_WEBHOOK_URL }}" >> .env
+        echo "DISCORD_WEBHOOK_URL_OF_ADMIN_SERVER=${{ secrets.DISCORD_WEBHOOK_URL_OF_ADMIN_SERVER }}" >> .env
+        echo "DISCORD_WEBHOOK_URL_OF_PUBLIC_SERVER=${{ secrets.DISCORD_WEBHOOK_URL_OF_PUBLIC_SERVER }}" >> .env
 
-    - name: Install Japanese fonts
-      run: sudo apt install fonts-noto
+    - name: Install required packages to run (ex. Japanese fonts)
+      run: sudo apt-get update && sudo apt-get install -y xvfb fonts-noto
       # 文字化けを防ぐ生活の知恵
       # https://qiita.com/zyyx-matsushita/items/c33f79e33f242395019e
 
